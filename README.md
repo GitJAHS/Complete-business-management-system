@@ -5,48 +5,55 @@ Modern Material You design, real‑time data, offline‑capable localStorage, an
 This will help every business owners to monitor every important things.
 
 ---
+<div class="container">
+  <div class="circle"></div>
+</div>
 
-<section class="container">
-    <div class="circle"></div>
-</section>
-html, body{
-  margin: 0;
-  height: 100%;
-}
+<style>
 .container {
-  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 10px;
 }
 
-.circle, .circle::before {
-  content: " ";
-  margin: 15px;
+.circle {
+  position: relative;
   width: 15px;
   height: 15px;
   border-radius: 50%;
-  margin: 0 auto;
-  transition: all 0.3s;
-  background-color: #FF0055;
+  background-color: #22c55e; /* মূল বৃত্তের সবুজ রঙ */
+  display: inline-block;
 }
 
 .circle::before {
-  animation: mymove 2s infinite;
+  content: "";
   position: absolute;
-  background-color: #00FF00
+  top: 0;
+  left: 0;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background-color: #22c55e; /* অ্যানিমেশনের সবুজ রঙ */
+  animation: mymove 2s infinite ease-out;
 }
 
-@-webkit-keyframes mymove {
-  50%   {
-    transform: scale(2);
-    opacity: 0
+@keyframes mymove {
+  0% {
+    transform: scale(1);
+    opacity: 1;
   }
-  100%   {
-    transform: scale(2);
-    opacity: 0
+  50% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
   }
 }
+</style>
+
 LIVE: https://gitjahs.github.io/Complete-business-management-system/
 
 
