@@ -6,14 +6,7 @@ This will help every business owners to monitor every important things.
 
 ---
 
-<svg width="30" height="30" viewBox="0 0 50 50" xmlns="http://w3.org" style="vertical-align: middle;">
-  <circle cx="25" cy="25" r="8" fill="#22c55e">
-    <animate attributeName="r" values="8;22" dur="2s" repeatCount="indefinite" />
-    <animate attributeName="opacity" values="1;0" dur="2s" repeatCount="indefinite" />
-  </circle>
-  <circle cx="25" cy="25" r="8" fill="#16a34a" />
-</svg>
-
+![Blinking Dot](blink.svg)
 
 LIVE: https://gitjahs.github.io/Complete-business-management-system/
 
