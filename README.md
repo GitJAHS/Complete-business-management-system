@@ -289,25 +289,12 @@ MIT – feel free to use, modify, and distribute.
 
 ## 🔗 Part 3 – Connect the ERP to Google Drive
 
-1. **Open your ERP** at your GitHub Pages URL:  
-   `https://your-username.github.io/my-erp/`
-
-2. **Go to Settings**  
-   Click **⚙️ Settings** in the left sidebar.
-
-3. **Enter the Client ID**  
-   Scroll down to the **🔗 Google Drive Sync** section.  
-   Paste your **Client ID** into the `Google Client ID` field.
-
-4. **Save settings**  
-   Click the **Save Settings** button at the top of the page.
-
-5. **Sign in with Google**  
+1. **Sign in with Google**  
    Click the **G  Sign in with Google** button in the same card.  
    - A Google pop‑up will open. Choose your Google account and grant permission.  
    - After granting, the button changes to **✅ Connected to Google Drive**.
 
-6. **Syncing starts automatically**  
+2. **Syncing starts automatically**  
    - Every change you make in the ERP is automatically saved to your Google Drive within **2 seconds**.  
    - You can also click the **🔄 Sync** button in the top bar to force a manual sync at any time.  
    - The top‑bar indicator shows `Online` / `Offline` / `Syncing…`.
@@ -325,6 +312,7 @@ A file called `erp_data.json` will appear in your Drive – it contains all your
 - **Developed by:** AI
 - **Instructed & Constructed by:** MD. JUNAYED AL HABIB
 - [Subscribe on YouTube: @iamxtremeV](https://www.youtube.com/@iamxtremeV)
+- Consider a donation: https://superchat.bd/iamxtremev
 
 ---
 
