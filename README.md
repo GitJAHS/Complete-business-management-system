@@ -6,8 +6,6 @@ This will help every business owners to monitor every important things.
 
 ---
 
-![Blinking Dot](blink.svg)
-
 LIVE: https://gitjahs.github.io/Complete-business-management-system/
 
 
