@@ -205,7 +205,7 @@ let activeProfileId = localStorage.getItem('erp_activeProfileId') || null;
 let googleToken = sessionStorage.getItem('erp_google_token') || null;
 
 const DB = {
-_data: { customers:[], products:[], invoices:[], sales:[], finance:{income:[],expenses:[]}, employees:[], suppliers:[], purchases:[], deliveries:[], offers:[], reports:[], auditLog:[], trash:[], config:{company:{name:'Acme Corp',address:'123 Main St, Springfield, IL 62701',phone:'+1-555-0000'},language:'en',country:'US',currency:'USD',timezone:'America/New_York',theme:{mode:'light',accentColor:'#6750A4'},settings:{autoBackup:true,performanceMode:'standard',googleClientId:''},logo:null}},
+_data: { customers:[], products:[], invoices:[], sales:[], finance:{income:[],expenses:[]}, employees:[], suppliers:[], purchases:[], deliveries:[], offers:[], reports:[], auditLog:[], trash:[], config:{company:{name:'Acme Corp',address:'123 Main St, Springfield, IL 62701',phone:'+1-555-0000'},language:'en',country:'US',currency:'USD',timezone:'America/New_York',theme:{mode:'light',accentColor:'#6750A4'},settings:{autoBackup:true,performanceMode:'standard',googleClientId:'905573658213-rt3jakh8bc1tl7bongo85jc402j6j9t2.apps.googleusercontent.com'},logo:null}},
 load(){
     if (!activeProfileId) return;
     Object.keys(this._data).forEach(k => {
@@ -217,7 +217,6 @@ load(){
     if (!this._data.auditLog) this._data.auditLog = [];
     if (!this._data.trash) this._data.trash = [];
     this._applyTheme();
-    loadEncryptedClientId();
 },
 save(){
     if (!activeProfileId) return;
@@ -321,16 +320,6 @@ function closeSidebar(){$('#sidebarEl').classList.remove('open');$('#sidebarOver
 function toggleSidebar(){$('#sidebarEl').classList.toggle('open');$('#sidebarOverlay').classList.toggle('show')}
 function renderPanel(panel){const area=$('#contentArea');switch(panel){case'dashboard':area.innerHTML=renderDashboard();break;case'customers':area.innerHTML=renderCustomers();break;case'products':area.innerHTML=renderProducts();setTimeout(drawInventoryChart,200);setTimeout(()=>addDateFilter('#prodCardHeader','prodTbl',9),100);break;case'invoices':area.innerHTML=renderInvoices();setTimeout(()=>addDateFilter('#invCardHeader','invTbl',7),100);break;case'sales':area.innerHTML=renderSales();setTimeout(()=>addDateFilter('#saleCardHeader','saleTbl',6),100);break;case'finance':area.innerHTML=renderFinance();setTimeout(()=>{addDateFilter('#incCardHeader','incTbl',3);addDateFilter('#expCardHeader','expTbl',3)},100);break;case'employees':area.innerHTML=renderEmployees();break;case'suppliers':area.innerHTML=renderSuppliers();break;case'purchases':area.innerHTML=renderPurchases();setTimeout(()=>addDateFilter('#purchCardHeader','purchTbl',4),100);break;case'deliveries':area.innerHTML=renderDeliveries();break;case'offers':area.innerHTML=renderOffers();setTimeout(()=>addDateFilter('#offerCardHeader','offerTbl',5),100);break;case'advisor':area.innerHTML=renderAdvisor();break;case'reports':area.innerHTML=renderReports();setTimeout(drawReportPieChart,200);break;case'settings':area.innerHTML=renderSettings();setTimeout(renderGoogleSyncCard,50);setTimeout(initGoogleButton,100);break;case'businessProfiles':area.innerHTML=renderBusinessProfiles();break;case'auditLog':area.innerHTML=renderAuditLogPanel();break;case'trash':area.innerHTML=renderTrash();break;case'about':area.innerHTML=renderAbout();break}setTimeout(rebindEvents,50)}
 
-// ==================== ENCRYPTION SYSTEM ====================
-let encKey = null;
-function getEncryptionKey() { if (encKey) return encKey; const rawKey = sessionStorage.getItem('erp_enc_key'); if (rawKey) return crypto.subtle.importKey('raw', base64ToArrayBuffer(rawKey), {name:'AES-GCM'}, false, ['encrypt','decrypt']).then(k => { encKey = k; return k; }); return crypto.subtle.generateKey({name:'AES-GCM', length:256}, true, ['encrypt','decrypt']).then(key => crypto.subtle.exportKey('raw', key).then(raw => { sessionStorage.setItem('erp_enc_key', arrayBufferToBase64(raw)); encKey = key; return key; })); }
-async function encryptClientId(plaintext) { const key = await getEncryptionKey(); const iv = crypto.getRandomValues(new Uint8Array(12)); const encoded = new TextEncoder().encode(plaintext); const ciphertext = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, encoded); return { iv: arrayBufferToBase64(iv), data: arrayBufferToBase64(ciphertext) }; }
-async function decryptClientId(encryptedObj) { try { const key = await getEncryptionKey(); const iv = base64ToArrayBuffer(encryptedObj.iv); const ciphertext = base64ToArrayBuffer(encryptedObj.data); const decrypted = await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, ciphertext); return new TextDecoder().decode(decrypted); } catch(e) { return null; } }
-function arrayBufferToBase64(buffer) { let binary=''; const bytes=new Uint8Array(buffer); for(let i=0;i<bytes.byteLength;i++) binary+=String.fromCharCode(bytes[i]); return btoa(binary); }
-function base64ToArrayBuffer(base64) { const binary=atob(base64); const bytes=new Uint8Array(binary.length); for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i); return bytes.buffer; }
-function loadEncryptedClientId() { const encrypted = localStorage.getItem('erp_encrypted_clientId'); if (encrypted) { try { const obj = JSON.parse(encrypted); decryptClientId(obj).then(plain => { if (plain) { DB._data.config.settings.googleClientId = plain; const field = document.getElementById('googleClientIdField'); if (field) field.value = plain; } }); } catch(e) {} } }
-async function saveEncryptedClientId(plaintext) { const encrypted = await encryptClientId(plaintext); localStorage.setItem('erp_encrypted_clientId', JSON.stringify(encrypted)); DB._data.config.settings.googleClientId = plaintext; }
-
 // ==================== GOOGLE DRIVE SYNC ====================
 function updateSyncStatus(status) { const el=document.getElementById('syncStatus'); if(el) el.textContent=status; const dot=document.getElementById('syncDot'); if(!dot) return; dot.className='sync-dot'; switch(status){ case'Offline':dot.classList.add('offline');break; case'Online':dot.classList.add('online');break; case'Syncing...':dot.classList.add('syncing');break; case'Error':dot.classList.add('error');break; } }
 async function loadFromDrive() { if(!googleToken) return; updateSyncStatus('Syncing...'); try{ const fileId=await findOrCreateErpFile(); const res=await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,{headers:{Authorization:`Bearer ${googleToken}`}}); if(!res.ok) throw new Error('Failed to load'); const driveData=await res.json(); if(driveData&&driveData.profiles){ localStorage.setItem('erp_profiles',JSON.stringify(driveData.profiles)); if(driveData.data){ Object.keys(driveData.data).forEach(profileId=>{ const profileData=driveData.data[profileId]; Object.keys(profileData).forEach(k=>{ localStorage.setItem('erp_'+profileId+'_'+k,JSON.stringify(profileData[k])); }); }); } activeProfileId=driveData.activeProfileId; localStorage.setItem('erp_activeProfileId',activeProfileId); DB.load(); updateProfileDisplay(); navigate(currentPanel); toast('Data loaded from Google Drive'); } updateSyncStatus('Online'); } catch(e){ updateSyncStatus('Error'); console.error(e); } }
@@ -340,18 +329,32 @@ function buildExportObject() { const profiles=getProfiles(); const data={}; prof
 let syncTimer=null;
 function debouncedSyncToDrive() { if(!googleToken) return; if(syncTimer) clearTimeout(syncTimer); syncTimer=setTimeout(()=>saveToDrive().catch(e=>console.error(e)),2000); }
 function syncNow() { if(!googleToken){ toast('Sign in with Google first (Settings page)'); return; } updateSyncStatus('Syncing...'); saveToDrive().then(()=>{ updateSyncStatus('Online'); toast('Sync completed'); }).catch(()=>{ updateSyncStatus('Error'); toast('Sync failed'); }); }
-async function googleSignIn() { const clientIdField=document.getElementById('googleClientIdField'); if(!clientIdField) return; const clientId=clientIdField.value.trim(); if(!clientId){ toast('Please enter your Google Client ID first'); return; } await saveEncryptedClientId(clientId); lockClientIdField(); const client=google.accounts.oauth2.initTokenClient({ client_id:clientId, scope:'https://www.googleapis.com/auth/drive.file', callback:(tokenResponse)=>{ if(tokenResponse.error){ toast('Google sign-in failed: '+tokenResponse.error); return; } googleToken=tokenResponse.access_token; sessionStorage.setItem('erp_google_token',googleToken); updateSyncStatus('Online'); toast('Google Drive connected!'); initGoogleButton(); loadFromDrive(); } }); client.requestAccessToken(); }
+async function googleSignIn() {
+    const clientId = DB._data.config.settings.googleClientId;
+    if (!clientId) { toast('Client ID not configured.'); return; }
+    const client = google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: 'https://www.googleapis.com/auth/drive.file',
+        callback: (tokenResponse) => {
+            if (tokenResponse.error) { toast('Google sign-in failed: ' + tokenResponse.error); return; }
+            googleToken = tokenResponse.access_token;
+            sessionStorage.setItem('erp_google_token', googleToken);
+            updateSyncStatus('Online');
+            toast('Google Drive connected!');
+            initGoogleButton();
+            loadFromDrive();
+        },
+    });
+    client.requestAccessToken();
+}
 function googleSignOut() {
     googleToken = null;
     sessionStorage.removeItem('erp_google_token');
     updateSyncStatus('Offline');
-    DB._data.config.settings.googleClientId = '';
+    DB._data.config.settings.googleClientId = '905573658213-rt3jakh8bc1tl7bongo85jc402j6j9t2.apps.googleusercontent.com'; // keep the ID but clear token
     localStorage.removeItem('erp_encrypted_clientId');
     const field = document.getElementById('googleClientIdField');
-    if (field) {
-        field.value = '';
-        unlockClientIdField();
-    }
+    if (field) { field.value = ''; }
     initGoogleButton();
     toast('Disconnected from Google Drive');
 }
@@ -393,8 +396,24 @@ function unlockClientIdField() {
     }
 }
 
-function initGoogleButton() { const btn=document.getElementById('googleSignInBtn'); if(!btn) return; if(googleToken){ btn.textContent='✅ Connected to Google Drive'; btn.classList.remove('btn-outlined'); btn.classList.add('btn-filled'); btn.onclick=googleSignOut; updateSyncStatus('Online'); lockClientIdField(); } else { btn.textContent='G  Sign in with Google'; btn.classList.remove('btn-filled'); btn.classList.add('btn-outlined'); btn.onclick=googleSignIn; unlockClientIdField(); } }
-function signOut() { if(googleToken) googleSignOut(); else toast('Already signed out'); }
+function initGoogleButton() {
+    const btn = document.getElementById('googleSignInBtn');
+    if (!btn) return;
+    if (googleToken) {
+        btn.textContent = '✅ Connected to Google Drive';
+        btn.classList.remove('btn-outlined');
+        btn.classList.add('btn-filled');
+        btn.onclick = googleSignOut;
+        updateSyncStatus('Online');
+    } else {
+        btn.textContent = 'G  Sign in with Google';
+        btn.classList.remove('btn-filled');
+        btn.classList.add('btn-outlined');
+        btn.onclick = googleSignIn;
+    }
+}
+
+function signOut() { if (googleToken) googleSignOut(); else toast('Already signed out'); }
 
 // ==================== AUDIT LOG ====================
 function addAudit(action, details){ DB._data.auditLog.push({ id: DB.uid('AUDIT'), timestamp: DB.now(), user: 'System', role: 'admin', action, details }); if(DB._data.auditLog.length > 500) DB._data.auditLog = DB._data.auditLog.slice(-500); }
@@ -550,7 +569,7 @@ function generateReport(){const report={id:DB.uid('RPT'),type:'daily',data:{tota
 
 // ==================== SETTINGS ====================
 function renderSettings(){const cfg=DB._data.config;return`<div class="card"><div class="card-header"><h3>System Configuration</h3></div><form id="settingsForm"><div class="form-grid-2"><div class="field"><label>Company Name</label><input name="companyName" value="${escapeHtml(cfg.company?.name||'')}"></div><div class="field"><label>Address</label><input name="companyAddress" value="${escapeHtml(cfg.company?.address||'')}"></div><div class="field"><label>Phone</label><input name="companyPhone" value="${escapeHtml(cfg.company?.phone||'')}"></div><div class="field"><label>Currency (e.g. USD, BDT, ₹)</label><input name="currency" value="${cfg.currency}"></div><div class="field"><label>Country</label><input name="country" value="${escapeHtml(cfg.country||'')}"></div><div class="field"><label>Theme</label><select name="themeMode"><option value="light" ${cfg.theme?.mode==='light'?'selected':''}>Light</option><option value="dark" ${cfg.theme?.mode==='dark'?'selected':''}>Dark</option></select></div><div class="field"><label>Accent Color</label><input name="accentColor" type="color" value="${cfg.theme?.accentColor||'#6750A4'}"></div></div><button type="submit" class="btn btn-filled mt-4">Save Settings</button></form></div><div class="card mt-4"><div class="card-header"><h3><span class="material-symbols-rounded">folder_open</span> Import / Export System Data</h3></div><div class="flex-between" style="gap:12px;flex-wrap:wrap;"><button class="btn btn-filled" id="exportDataBtn"><span class="material-symbols-rounded">download</span> Export All Data (JSON)</button><button class="btn btn-outlined" id="importDataBtn"><span class="material-symbols-rounded">upload</span> Import Data</button><input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="window._handleImportFile(this)"></div><p style="font-size:0.75rem;color:var(--md-on-surface-variant);margin-top:8px;">Data is saved in your browser's localStorage.</p></div><div class="card mt-4"><div class="card-header"><h3><span class="material-symbols-rounded">cloud_sync</span> Google Drive Sync</h3></div><div id="googleSyncCardContent"></div></div><div class="card mt-4"><div class="card-header"><h3><span class="material-symbols-rounded">delete_forever</span> Data Management</h3></div><button class="btn btn-danger" id="clearDataBtn"><span class="material-symbols-rounded">delete_forever</span> Move All Data to Trash</button><p style="font-size:0.75rem;color:var(--md-on-surface-variant);margin-top:8px;">This will move all ERP data to the trash bin. You can restore or permanently delete from there.</p></div>`;}
-function saveSettings(e){e.preventDefault();const f=document.getElementById('settingsForm'),fd=new FormData(f);DB._data.config.company={name:fd.get('companyName'),address:fd.get('companyAddress'),phone:fd.get('companyPhone')};DB._data.config.currency=fd.get('currency')||'USD';DB._data.config.country=fd.get('country')||'';DB._data.config.theme={mode:fd.get('themeMode'),accentColor:fd.get('accentColor')};const googleClientIdField = document.getElementById('googleClientIdField');if (googleClientIdField && !googleToken) { const newId = googleClientIdField.value.trim(); saveEncryptedClientId(newId); } DB.save(); DB._applyTheme(); toast('Settings saved'); updateAlertBadge(); }
+function saveSettings(e){e.preventDefault();const f=document.getElementById('settingsForm'),fd=new FormData(f);DB._data.config.company={name:fd.get('companyName'),address:fd.get('companyAddress'),phone:fd.get('companyPhone')};DB._data.config.currency=fd.get('currency')||'USD';DB._data.config.country=fd.get('country')||'';DB._data.config.theme={mode:fd.get('themeMode'),accentColor:fd.get('accentColor')};DB.save(); DB._applyTheme(); toast('Settings saved'); updateAlertBadge(); }
 function exportAllData(){const profiles = getProfiles();const data = {};profiles.forEach(p => {const profileData = {};Object.keys(DB._data).forEach(k => {const raw = localStorage.getItem('erp_' + p.id + '_' + k);profileData[k] = raw ? JSON.parse(raw) : (k === 'finance' ? {income:[],expenses:[]} : (k === 'config' ? null : []));});data[p.id] = profileData;});const exportObj = { version: 1, profiles: profiles, data: data, activeProfileId: activeProfileId };const blob = new Blob([JSON.stringify(exportObj, null, 2)], {type:'application/json'});const url = URL.createObjectURL(blob);const a = document.createElement('a');a.href = url;a.download = 'erp_backup_' + new Date().toISOString().slice(0,10) + '.json';a.click();URL.revokeObjectURL(url);toast('All profiles exported successfully');}
 function importAllData(file){const reader = new FileReader();reader.onload = function(e){try {const imported = JSON.parse(e.target.result);if (confirm('This will overwrite all current data. Continue?')) {Object.keys(localStorage).forEach(key => {if (key.startsWith('erp_') || key === 'erp_profiles' || key === 'erp_activeProfileId') {localStorage.removeItem(key);}});if (imported.profiles && imported.data && imported.activeProfileId) {saveProfiles(imported.profiles);Object.keys(imported.data).forEach(profileId => {const profileData = imported.data[profileId];Object.keys(profileData).forEach(k => {localStorage.setItem('erp_' + profileId + '_' + k, JSON.stringify(profileData[k]));});});activeProfileId = imported.activeProfileId;localStorage.setItem('erp_activeProfileId', activeProfileId);} else {if (!activeProfileId) {const defaultProf = createProfile('Default Business');activeProfileId = defaultProf.id;localStorage.setItem('erp_activeProfileId', activeProfileId);}Object.keys(imported).forEach(k => {if (DB._data.hasOwnProperty(k)) {localStorage.setItem('erp_' + activeProfileId + '_' + k, JSON.stringify(imported[k]));}});}toast('Data imported successfully! Reloading...');setTimeout(() => { location.reload(); }, 1000);}} catch(err) {toast('Invalid file format');}};reader.readAsText(file);}
 window._handleImportFile=function(input){const file=input.files[0];if(file)importAllData(file);input.value='';};
@@ -571,7 +590,7 @@ function renderAuditLogPanel(){ const logs = [...DB._data.auditLog].reverse().sl
 // ==================== MULTIPLE BUSINESS PROFILES ====================
 function getProfiles(){ const raw = localStorage.getItem('erp_profiles'); try { return raw ? JSON.parse(raw) : []; } catch(e) { return []; } }
 function saveProfiles(profiles){ localStorage.setItem('erp_profiles', JSON.stringify(profiles)); }
-function switchProfile(profileId){ DB.save(); activeProfileId = profileId; localStorage.setItem('erp_activeProfileId', profileId); DB._data = {customers:[],products:[],invoices:[],sales:[],finance:{income:[],expenses:[]},employees:[],suppliers:[],purchases:[],deliveries:[],offers:[],reports:[],auditLog:[],trash:[],config:{company:{name:'Acme Corp',address:'123 Main St, Springfield, IL 62701',phone:'+1-555-0000'},language:'en',country:'US',currency:'USD',timezone:'America/New_York',theme:{mode:'light',accentColor:'#6750A4'},settings:{autoBackup:true,performanceMode:'standard',googleClientId:DB._data.config.settings.googleClientId||''},logo:null}}; DB.load(); updateProfileDisplay(); navigate(currentPanel); toast('Switched to ' + (getProfiles().find(p=>p.id===profileId)?.name || 'Unknown')); }
+function switchProfile(profileId){ DB.save(); activeProfileId = profileId; localStorage.setItem('erp_activeProfileId', profileId); DB._data = {customers:[],products:[],invoices:[],sales:[],finance:{income:[],expenses:[]},employees:[],suppliers:[],purchases:[],deliveries:[],offers:[],reports:[],auditLog:[],trash:[],config:{company:{name:'Acme Corp',address:'123 Main St, Springfield, IL 62701',phone:'+1-555-0000'},language:'en',country:'US',currency:'USD',timezone:'America/New_York',theme:{mode:'light',accentColor:'#6750A4'},settings:{autoBackup:true,performanceMode:'standard',googleClientId:DB._data.config.settings.googleClientId||'905573658213-rt3jakh8bc1tl7bongo85jc402j6j9t2.apps.googleusercontent.com'},logo:null}}; DB.load(); updateProfileDisplay(); navigate(currentPanel); toast('Switched to ' + (getProfiles().find(p=>p.id===profileId)?.name || 'Unknown')); }
 function updateProfileDisplay(){ const profiles = getProfiles(); const current = profiles.find(p=>p.id===activeProfileId); const display = document.getElementById('profileNameDisplay'); if (display) display.textContent = current ? current.name : 'No Profile'; }
 function createProfile(name){ const profiles = getProfiles(); const newProfile = { id: DB.uid('PROF'), name: name, createdAt: DB.now() }; profiles.push(newProfile); saveProfiles(profiles); return newProfile; }
 function renameProfile(profileId, newName){ const profiles = getProfiles(); const profile = profiles.find(p=>p.id===profileId); if (profile) { profile.name = newName; saveProfiles(profiles); } }
@@ -649,17 +668,15 @@ window.addEventListener('resize',()=>{if(currentPanel==='products')drawInventory
 function renderGoogleSyncCard(){
     const container = document.getElementById('googleSyncCardContent');
     if (!container) return;
-    const clientId = DB._data.config.settings.googleClientId || '';
     container.innerHTML = `
-        <div class="field mb-4">
-            <label>Google Client ID</label>
-            <input name="googleClientId" id="googleClientIdField" value="${escapeHtml(clientId)}"
-                   placeholder="Paste your OAuth 2.0 Client ID" autocomplete="off"
-                   ${googleToken ? 'readonly class="api-key-locked"' : ''}>
-            <small>Get one at console.cloud.google.com → Web application</small>
+        <div style="text-align:center;margin-bottom:12px;">
+            <button type="button" class="btn btn-filled" id="googleSignInBtn" style="width:100%;">
+                G  Sign in with Google
+            </button>
+            <p style="font-size:0.75rem;color:var(--md-on-surface-variant);margin-top:8px;">
+                Your data will sync to your own Google Drive automatically.
+            </p>
         </div>
-        <button type="button" class="btn btn-outlined" id="googleSignInBtn" style="width:100%;">G  Sign in with Google</button>
-        <p style="font-size:0.75rem;color:var(--md-on-surface-variant);margin-top:8px;">After signing in, your data will sync to Google Drive automatically.</p>
     `;
     initGoogleButton();
 }
