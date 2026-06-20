@@ -5,54 +5,15 @@ Modern Material You design, real‑time data, offline‑capable localStorage, an
 This will help every business owners to monitor every important things.
 
 ---
-<div class="container">
-  <div class="circle"></div>
-</div>
 
-<style>
-.container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 10px;
-}
+<svg width="30" height="30" viewBox="0 0 50 50" xmlns="http://w3.org" style="vertical-align: middle;">
+  <circle cx="25" cy="25" r="8" fill="#22c55e">
+    <animate attributeName="r" values="8;22" dur="2s" repeatCount="indefinite" />
+    <animate attributeName="opacity" values="1;0" dur="2s" repeatCount="indefinite" />
+  </circle>
+  <circle cx="25" cy="25" r="8" fill="#16a34a" />
+</svg>
 
-.circle {
-  position: relative;
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  background-color: #22c55e; /* মূল বৃত্তের সবুজ রঙ */
-  display: inline-block;
-}
-
-.circle::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  background-color: #22c55e; /* অ্যানিমেশনের সবুজ রঙ */
-  animation: mymove 2s infinite ease-out;
-}
-
-@keyframes mymove {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(2.5);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(2.5);
-    opacity: 0;
-  }
-}
-</style>
 
 LIVE: https://gitjahs.github.io/Complete-business-management-system/
 
