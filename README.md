@@ -5,7 +5,7 @@ Modern Material You design, real‑time data, offline‑capable localStorage, an
 
 ---
 
-LIVE: https://gitjahs.github.io/My-ERP-system/
+LIVE: https://gitjahs.github.io/Complete-business-management-system/
 
 
 ## 📸 Demo
