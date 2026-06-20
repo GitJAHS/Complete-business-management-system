@@ -1,7 +1,8 @@
 # Enterprise ERP System v2.0
 
-A complete, self‑hosted Enterprise Resource Planning (ERP) system built entirely in a **single HTML file**.  
+A complete, self‑hosted on github, Enterprise Resource Planning (ERP) system built entirely in a **single HTML file**.  
 Modern Material You design, real‑time data, offline‑capable localStorage, and optional Google Drive sync. No server, no build step – just open in a browser.
+This will help every business owners to monitor every important things.
 
 ---
 
