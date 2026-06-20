@@ -10,9 +10,12 @@ LIVE: https://gitjahs.github.io/Complete-business-management-system/
 
 ## 📸 Demo
 
-> *Open `index.html` in any modern browser to see the live dashboard.*
+> *Open `LIVE` in any modern browser to see the live dashboard.*
 
-![Dashboard Screenshot](https://via.placeholder.com/800x400?text=Dashboard+Screenshot)
+Dashboard screenshot:
+<img width="1919" height="955" alt="Screenshot 2026-06-21 031739" src="https://github.com/user-attachments/assets/127faf9e-ed0a-4bad-b637-d8d5d2415458" />
+
+
 
 ---
 
